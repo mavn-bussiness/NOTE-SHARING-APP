@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Signup from './components/Auth/Signup';
 import Login from './components/Auth/Login';
@@ -11,7 +11,28 @@ function PrivateRoute({ children }) {
 }
 
 function App() {
-  const isLoggedIn = localStorage.getItem('token');
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+
+  // Listen for token changes
+  useEffect(() => {
+    const checkAuth = () => {
+      setIsLoggedIn(!!localStorage.getItem('token'));
+    };
+
+    // Check on mount
+    checkAuth();
+
+    // Listen for storage changes (for cross-tab sync)
+    window.addEventListener('storage', checkAuth);
+
+    // Custom event for same-tab updates
+    window.addEventListener('authChange', checkAuth);
+
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('authChange', checkAuth);
+    };
+  }, []);
 
   return (
     <Router>

@@ -23,6 +23,10 @@ export default function Login() {
     try {
       const res = await API.post('/login', { username, password });
       localStorage.setItem('token', res.data.access_token);
+      
+      // Trigger auth state change
+      window.dispatchEvent(new Event('authChange'));
+      
       navigate('/notes');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');

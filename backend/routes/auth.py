@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, User
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import bcrypt
 
 auth_bp = Blueprint('auth', __name__)
@@ -86,3 +86,24 @@ def login():
         import traceback
         traceback.print_exc()
         return jsonify({'message': 'Error during login', 'error': str(e)}), 500
+
+@auth_bp.route('/user/me', methods=['GET'])
+@jwt_required()
+def get_current_user():
+    try:
+        user_id = get_jwt_identity()
+        user_id = int(user_id) if isinstance(user_id, str) else user_id
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'message': 'User not found'}), 404
+        
+        return jsonify({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching user: {str(e)}")
+        return jsonify({'message': 'Error fetching user', 'error': str(e)}), 500

@@ -13,11 +13,10 @@ app.config.from_object(Config)
 db.init_app(app)
 jwt = JWTManager(app)
 
-# Configure CORS properly - ADD PATCH method
 CORS(app, resources={
     r"/api/*": {
         "origins": ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"],
-        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],  # Added PATCH
+        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "expose_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True

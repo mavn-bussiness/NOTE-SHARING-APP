@@ -16,8 +16,8 @@ class Note(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=True)
-    position = db.Column(db.Text, nullable=True)  # {"x": ..., "y": ...}
-    size = db.Column(db.Text, nullable=True)       # {"width": ..., "height": ...}
+    position = db.Column(db.Text, nullable=True)
+    size = db.Column(db.Text, nullable=True)  
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

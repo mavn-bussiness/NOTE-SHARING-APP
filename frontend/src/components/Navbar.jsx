@@ -1,14 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import API from "../services/api";
-import {
-  Menu,
-  X,
-  LogOut,
-  User,
-  ClipboardList,
-  NotebookTabs,
-} from "lucide-react";
+import { Menu, X, LogOut, User, ClipboardList, NotebookTabs } from "lucide-react";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -20,6 +13,7 @@ export default function Navbar() {
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const menuRef = useRef(null);
 
+  // Fetch user data if token exists
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -27,10 +21,13 @@ export default function Navbar() {
         setUser(res.data);
       } catch (err) {
         console.error("Error fetching user:", err);
-        if (err.response?.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
-        }
+        localStorage.removeItem("token");
+        setUser(null);
+        
+        // Trigger auth state change
+        window.dispatchEvent(new Event('authChange'));
+        
+        navigate("/login");
       }
     };
     if (token) fetchUser();
@@ -38,8 +35,7 @@ export default function Navbar() {
 
   // Close dropdown on outside click or Escape
   useEffect(() => {
-    const handleClickOutside = (e) =>
-      menuRef.current && !menuRef.current.contains(e.target) && setMenuOpen(false);
+    const handleClickOutside = (e) => menuRef.current && !menuRef.current.contains(e.target) && setMenuOpen(false);
     const handleEsc = (e) => e.key === "Escape" && setMenuOpen(false);
 
     if (menuOpen) {
@@ -54,6 +50,11 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    setUser(null);
+    
+    // Trigger auth state change
+    window.dispatchEvent(new Event('authChange'));
+    
     navigate("/login");
     setLogoutConfirm(false);
   };
@@ -73,6 +74,8 @@ export default function Navbar() {
     </Link>
   );
 
+  const isLoggedIn = !!token && !!user;
+
   return (
     <>
       {/* DESKTOP NAV */}
@@ -91,7 +94,7 @@ export default function Navbar() {
         {/* Nav Links + User */}
         <div className="flex items-center gap-5">
           {token && <NavLink to="/notes" icon={ClipboardList} label="Board" />}
-          {!token ? (
+          {!isLoggedIn ? (
             <div className="flex items-center gap-3">
               <Link
                 to="/login"
@@ -113,12 +116,10 @@ export default function Navbar() {
                 className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
               >
                 <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">
-                    {user?.username?.[0]?.toUpperCase() || "U"}
-                  </span>
+                  <span className="text-white font-bold text-sm">{user.username[0].toUpperCase()}</span>
                 </div>
                 <span className="text-sm font-medium text-white truncate max-w-[8rem] hidden lg:block">
-                  {user?.username || "User"}
+                  {user.username}
                 </span>
                 {menuOpen ? <X size={14} /> : <Menu size={14} />}
               </button>
@@ -127,10 +128,8 @@ export default function Navbar() {
               {menuOpen && (
                 <div className="absolute right-0 mt-3 w-56 bg-[#2a2a2a]/95 backdrop-blur-lg rounded-xl border border-white/10 shadow-2xl overflow-hidden animate-fadeIn">
                   <div className="px-4 py-3 border-b border-white/10">
-                    <p className="text-sm font-semibold text-white truncate">
-                      {user?.username}
-                    </p>
-                    <p className="text-xs text-gray-400">{user?.email}</p>
+                    <p className="text-sm font-semibold text-white truncate">{user.username}</p>
+                    <p className="text-xs text-gray-400">{user.email}</p>
                   </div>
                   <div className="py-2 flex flex-col">
                     <NavLink to="/profile" icon={User} label="Profile" />
@@ -163,17 +162,15 @@ export default function Navbar() {
 
         {menuOpen && (
           <div className="absolute bottom-20 right-0 w-64 bg-[#2a2a2a]/95 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl animate-fadeIn p-3">
-            {token ? (
+            {isLoggedIn ? (
               <>
                 <div className="flex items-center gap-3 border-b border-white/10 pb-3 mb-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">
-                      {user?.username?.[0]?.toUpperCase() || "U"}
-                    </span>
+                    <span className="text-white font-bold text-sm">{user.username[0].toUpperCase()}</span>
                   </div>
                   <div>
-                    <p className="text-white text-sm font-semibold">{user?.username}</p>
-                    <p className="text-xs text-gray-400">{user?.email}</p>
+                    <p className="text-white text-sm font-semibold">{user.username}</p>
+                    <p className="text-xs text-gray-400">{user.email}</p>
                   </div>
                 </div>
                 <NavLink to="/notes" icon={ClipboardList} label="Board" />
@@ -211,7 +208,7 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* LOGOUT MODAL */}
+       {/* LOGOUT MODAL */}
       {logoutConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn p-4">
           <div className="bg-[#2a2a2a]/95 rounded-2xl p-8 max-w-sm w-full border border-white/10 shadow-2xl animate-slideUp text-center">
